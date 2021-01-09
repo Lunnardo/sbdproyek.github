@@ -12,11 +12,11 @@ const bcrypt = require('bcrypt');
 //Insiasi koneksi ke database
 const db = new Client({
 
-    user: "lunnardo",
-    password: "Crosscounter2",
-    host: "lunnardodatabase1.c52ao3mif5t1.us-east-1.rds.amazonaws.com",
+    user: "postgres",
+    password: "",
+    host: "",
     port: 5432,
-    database: "warehouse_catalog"
+    database: "uas_sbd"
     //isi dengan konfigurasi database anda
 
 
@@ -107,11 +107,11 @@ router.get('/', (req, res) => {
 
                             $.post('/register', { username: username, pass: pass }, function(data) {
                                 if (data === 'done') {
-                                    
+
                                     window.alert('Registrasi Sukses');
                                 }
                                 if (data === 'err') {
-                                    
+
                                     window.alert('Registrasi Salah/Gagal');
                                 }
                             });
@@ -189,13 +189,49 @@ res.end('done');
 }});
 
 
-router.post('/delete', (req, res) => {
+router.get('/delete', (req, res) => {
     temp = req.session;
-    temp.id = req.body.id;
+    temp.p_id = req.body.id;
     //menghapus data_covid berdasarkan id
     //tambahkan konfigurasi delete di sini
-    const del = db.query(`DELETE FROM produk WHERE id='${req.body.id}'`)
-    res.end('done');
+    const del = db.query(`DROP TABLE "Produk"`)
+    res.write(`<html>
+    <head>
+        <title>Warehouse Catalogue</title>
+    </head>
+
+    <body style="background-color: lightblue; text-align: center;">`);
+    res.write(
+    `<h1> Welcome ${temp.username}</h1>
+     <h2> Database Deleted </h2>
+    `
+    );
+    res.write('<a href=' + '/' + '>Click here to Log Out<br></a>');
+    res.write('<a href=' + '/admin' + '>Click here to go Back<br></a>');
+
+});
+
+router.get('/addTable', (req, res) => {
+    temp = req.session;
+    temp.p_id = req.body.id;
+    //menghapus data_covid berdasarkan id
+    //tambahkan konfigurasi delete di sini
+    const del = db.query(`create table "Produk"(p_id serial PRIMARY KEY, p_nama varchar(20) NOT NULL,
+                          p_deskripsi text NOT NULL, p_stok int NOT NULL, p_harga float NOT NULL,
+                          p_ukuran float NOT NULL, p_berat float NOT NULL);`)
+    res.write(`<html>
+    <head>
+        <title>Warehouse Catalogue</title>
+    </head>
+
+    <body style="background-color: lightblue; text-align: center;">`);
+    res.write(
+    `<h1> Welcome ${temp.username}</h1>
+     <h2> Table Produk Created </h2>
+    `
+    );
+    res.write('<a href=' + '/' + '>Click here to Log Out<br></a>');
+    res.write('<a href=' + '/admin' + '>Click here to go Back<br></a>');
 
 });
 
@@ -224,13 +260,13 @@ router.get('/admin', (req, res) => {
                 <td style="text-align: center; vertical-align: middle;">
                     <th>id</th>
                     <th>nama</th>
-                  
+
                     <th>stok</th>
                     <th>harga</th>
-                    
+
                 </tr>`
         );
-        const query = `select * from produk ;`; // tambahkan query ambil data
+        const query = `select * from "Produk" ;`; // tambahkan query ambil data
         db.query(query, (err, results) => {
             if (err) {
                 console.error(err.detail);
@@ -244,14 +280,16 @@ router.get('/admin', (req, res) => {
                     <td style="text-align: center; vertical-align: middle;">
                     <td>${row['p_id']}</td>
                     <td>${row['p_nama']}</td>
-                    
+
                     <td>${row['p_stok']}</td>
                     <td>${row['p_harga']}</td>
-              
-                     
+
+
                     <td> <a href= '/detail' + '>Details</a> </td>
-                    <td> <a href= '/delete' + '>Delete</a> </td>
-                    
+                    >
+                  <td><a href='/delete' data-id="@item.Id" id ="linkdelete"><i class="icon-remove"></i>Delete</a></td>
+
+
                     `
                 );
 
@@ -262,37 +300,42 @@ router.get('/admin', (req, res) => {
             <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js%22%3E</script>
             <script>
             jQuery(document).ready(function($) {
-                var p_id, p_nama, p_deskripsi, p_stok, p_harga, p_ukuran, p_berat;
-                 $('#dets').click({
-                    id = $('#p_id').val();
-                    nama = $('#p_nama').val();
-                    deskripsi = $('#p_deskripsi').val();
-                    stok = $('#p_stok').val();
-                    harga = $('#p_harga').val();
-                    ukuran = $('#p_ukuran').val();
-                    berat = $('#p_berat').val();
-
-                $.get('/detail', { id: id, nama: nama, deskripsi: deskripsi, stok: stok, harga: harga, ukuran: ukuran, berat: berat } {
-                    
-                        window.location.href = '/detail';
-                        window.alert('Menuju Detail');
-                    
-                   
-                });
-            });
-        }); 
+              $("#linkdelete").click(function (e) {
+              var obj = $(this); // first store $(this) in obj
+              var id = $(this).data('id'); // get id of data using this
+              $.ajax({
+                  url: "/delete",
+                  data: { id: id },
+                  //cache: false,
+                  //contentType: false,
+                  //processData: false,
+                  //mimeType: "multipart/form-data",
+                  type: "Post",
+                  dataType: "Json",
+                  success: function(result) {
+                      if (result.Success) {
+                          $(obj).closest("tr").remove(); // You can remove row like this
+                      }
+                      eval(result.Script);
+                  },
+                  error: function() {
+                      alert("خطا!");
+                  }
+              });
+          });
         </script>
-        
-                        
+
+
 // isi dengan konfigurasi delete data berdasarkan id
 
 
-                
+
             </html>`);
             console.log('Data Fetch successful');
         });
         res.write('<a href=' + '/Item' + '>Click here to add an item<br></a>');
         res.write('<a href=' + '/logout' + '>Click here to log out<br></a>');
+        res.write('<a href=' + '/addTable' + '>Click here to Create Tablet<br></a>');
     }
     else {
         res.write('<h1>You need to log in before you can see this page.</h1>');
@@ -371,6 +414,7 @@ router.get('/Item', (req, res) => {
 
 
       res.write('<a href=' + '/logout' + '>Click here to log out<br></a>');
+      res.write('<a href=' + '/admin' + '>Click here to go Back<br></a>');
 
   }
   else {
@@ -398,7 +442,7 @@ router.post('/addItem', (req, res) => {
             return res.status(401).send("Harap Masukkan Semua Bidang)");
         }
 
-    const query = `INSERT INTO produk(p_id, p_nama, p_deskripsi, p_stok, p_harga, p_ukuran, p_berat) VALUES ('${req.body.id}',
+    const query = `INSERT INTO "Produk"(p_id, p_nama, p_deskripsi, p_stok, p_harga, p_ukuran, p_berat) VALUES ('${req.body.id}',
     '${req.body.nama}', '${req.body.deskripsi}', '${req.body.stok}', '${req.body.harga}', '${req.body.ukuran}', '${req.body.berat}')`;
 db.query(query, (err,results) => {
 if(err){
@@ -441,7 +485,8 @@ router.get('/detail', (req, res) => {
         res.write( // table header
             `<table>
                 <tr>
-                    <th>id</th>
+                <td style="text-align: center; vertical-align: middle;">
+                    <th>id</td>
                     <th>nama</th>
                     <th>deskripsi</th>
                     <th>stok</th>
@@ -450,7 +495,7 @@ router.get('/detail', (req, res) => {
                     <th>berat</th>
                 </tr>`
         );
-        const query = `select * from produk ;`; // tambahkan query ambil data
+        const query = `select * from "Produk" ;`; // tambahkan query ambil data
         db.query(query, (err, results) => {
             if (err) {
                 console.error(err.detail);
@@ -475,12 +520,6 @@ router.get('/detail', (req, res) => {
             }
     });
     res.write('<a href=' + '/logout' + '>Click here to log out<br></a>');
-    
+    res.write('<a href=' + '/admin' + '>Click here to go back<br></a>');
+
 });
-    
-
-
-
-
-
-//////////////////23131313131312
