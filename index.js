@@ -12,11 +12,11 @@ const bcrypt = require('bcrypt');
 //Insiasi koneksi ke database
 const db = new Client({
 
-    user: "lunnardo",
-    password: "Crosscounter2",
-    host: "lunnardodatabase1.c52ao3mif5t1.us-east-1.rds.amazonaws.com",
+    user: "",
+    password: "",
+    host: "",
     port: 5432,
-    database: "warehouse_catalog"
+    database: ""
     //isi dengan konfigurasi database anda
 
 
